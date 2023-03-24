@@ -73,6 +73,8 @@ class SystemData implements SerializableDataInterface, LoggableInterface
      */
     public $configuredHostname = null;
 
+    public $containerId = null;
+
     /** @inheritDoc */
     public function jsonSerialize()
     {
@@ -81,6 +83,10 @@ class SystemData implements SerializableDataInterface, LoggableInterface
         SerializationUtil::addNameValueIfNotNull('hostname', $this->hostname, /* ref */ $result);
         SerializationUtil::addNameValueIfNotNull('detected_hostname', $this->detectedHostname, /* ref */ $result);
         SerializationUtil::addNameValueIfNotNull('configured_hostname', $this->configuredHostname, /* ref */ $result);
+
+        $container = [];
+        SerializationUtil::addNameValueIfNotNull('id', $this->containerId, $container);
+        SerializationUtil::addNameValueIfNotEmpty('container', $container, $result);
 
         return SerializationUtil::postProcessResult($result);
     }

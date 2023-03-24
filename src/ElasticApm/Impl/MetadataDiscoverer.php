@@ -49,15 +49,19 @@ final class MetadataDiscoverer
     /** @var Logger */
     private $logger;
 
-    private function __construct(ConfigSnapshot $config, LoggerFactory $loggerFactory)
+    /** @var FileReaderInterface */
+    private $fileReader;
+
+    private function __construct(ConfigSnapshot $config, LoggerFactory $loggerFactory, FileReaderInterface $fileReader)
     {
         $this->config = $config;
         $this->logger = $loggerFactory->loggerForClass(LogCategory::BACKEND_COMM, __NAMESPACE__, __CLASS__, __FILE__);
+        $this->fileReader = $fileReader;
     }
 
-    public static function discoverMetadata(ConfigSnapshot $config, LoggerFactory $loggerFactory): Metadata
+    public static function discoverMetadata(ConfigSnapshot $config, LoggerFactory $loggerFactory, FileReaderInterface $fileReader): Metadata
     {
-        return (new MetadataDiscoverer($config, $loggerFactory))->doDiscoverMetadata();
+        return (new MetadataDiscoverer($config, $loggerFactory, $fileReader))->doDiscoverMetadata();
     }
 
     private function doDiscoverMetadata(): Metadata
@@ -66,7 +70,7 @@ final class MetadataDiscoverer
 
         $result->process = MetadataDiscoverer::discoverProcessData();
         $result->service = MetadataDiscoverer::discoverServiceData($this->config);
-        $result->system = MetadataDiscoverer::discoverSystemData($this->config);
+        $result->system = MetadataDiscoverer::discoverSystemData($this->config, $this->fileReader);
 
         return $result;
     }
@@ -114,7 +118,7 @@ final class MetadataDiscoverer
         return $result;
     }
 
-    public function discoverSystemData(ConfigSnapshot $config): SystemData
+    public function discoverSystemData(ConfigSnapshot $config, FileReaderInterface $fileReader): SystemData
     {
         $result = new SystemData();
 
@@ -130,7 +134,34 @@ final class MetadataDiscoverer
             }
         }
 
+        $containerId = $this->detectContainerId($fileReader);
+        if ($containerId) {
+            $result->containerId = $containerId;
+        }
+
         return $result;
+    }
+
+    public static function detectContainerId(FileReaderInterface $fileReader):? string
+    {
+        $containerId = null;
+
+        if ($fileReader->isReadable('/proc/self/mountinfo')) {
+            $payload = $fileReader->read('/proc/self/mountinfo');
+
+            $containerId = self::detectContainerIdInString($payload);
+        }
+
+        return Tracer::limitNullableKeywordString($containerId);
+    }
+
+    private static function detectContainerIdInString(string $payload): ?string
+    {
+        $matches = [];
+
+        preg_match("/\/docker\/containers\/(\w+)\//", $payload, $matches);
+
+        return $matches[1] ?? null;
     }
 
     public static function detectHostname(): ?string

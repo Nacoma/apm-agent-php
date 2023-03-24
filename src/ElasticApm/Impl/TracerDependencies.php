@@ -46,6 +46,8 @@ final class TracerDependencies implements LoggableInterface
     /** @var ?Log\SinkInterface */
     public $logSink = null;
 
+    /** @var ?FileReaderInterface */
+    public $fileReader = null;
     public function toLog(LogStreamInterface $stream): void
     {
         $getDependencyType = function (?object $dep): ?string {
@@ -58,6 +60,7 @@ final class TracerDependencies implements LoggableInterface
                 'configRawSnapshotSource' => $getDependencyType($this->configRawSnapshotSource),
                 'eventSink'               => $getDependencyType($this->eventSink),
                 'logSink'                 => $getDependencyType($this->logSink),
+                'fileReader'              => $getDependencyType($this->fileReader),
             ]
         );
     }

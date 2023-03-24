@@ -72,6 +72,12 @@ final class TracerBuilder
         return $this;
     }
 
+    public function withFileReader(FileReaderInterface $fileReader): self
+    {
+        $this->tracerDependencies->fileReader = $fileReader;
+        return $this;
+    }
+
     public function withEventSink(EventSinkInterface $eventSink): self
     {
         $this->tracerDependencies->eventSink = $eventSink;

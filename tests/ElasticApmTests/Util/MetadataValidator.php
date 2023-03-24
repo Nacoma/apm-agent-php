@@ -146,6 +146,7 @@ final class MetadataValidator
         self::assertValidNullableKeywordString($systemData->hostname);
         self::assertValidNullableKeywordString($systemData->configuredHostname);
         self::assertValidNullableKeywordString($systemData->detectedHostname);
+        self::assertValidNullableKeywordString($systemData->containerId);
         if ($systemData->configuredHostname === null) {
             TestCase::assertSame($systemData->detectedHostname, $systemData->hostname);
         } else {
